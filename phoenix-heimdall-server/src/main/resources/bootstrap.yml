@@ -1,0 +1,183 @@
+spring: 
+  aop: 
+    auto: true
+    # cglib proxy not jdk proxy
+    # proxy-target-class: false
+  custom: # 自定义属性
+    default-env: ${SERVER_ENVIROMENT:sit}
+    default-name: application
+    default-label: master
+    default-profile: ${PROFILES_ACTIVITE:default}
+  #config: # 简化版本地数据源配置
+  #  name: ${spring.custom.default-name}  
+  #  additional-location: classpath:/config/${spring.custom.default-env}/
+  profiles: 
+    active: composite #启用的配置文件
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+  cloud: 
+    refresh: 
+      enabled: true
+    # RestTemplate和LoadBalancerClient的负载均衡重试策略
+    loadbalancer: 
+      retry: false
+    # 统一配置中心(本地与git)
+    config: 
+      # client端配置
+      enabled: true
+      watch: 
+        enabled: false
+      profile: ${spring.custom.default-profile}
+      name: ${spring.custom.default-name}
+      label: ${spring.custom.default-label}
+      failFast: false
+      # 本地集成服务端config配置
+      server: #ConfigServerProperties
+        bootstrap: true
+        prefix: /config
+        default-label: ${spring.custom.default-label}
+        default-application-name: ${spring.custom.default-name}
+        default-profile: ${spring.custom.default-profile}
+        strip-document-from-yaml: true #in "native" form
+        accept-empty: true #HTTP 404 needs to be sent
+        overrides: # 属性覆盖
+          foo: bar
+        health: 
+          enabled: false
+        composite:  # 复合数据源配置
+          - 
+            type: native   # 本地数据源配置
+            order: 1
+            add-label-locations: true
+            fail-on-error: false #how to handle exceptions during decryption
+            search-locations: 
+              - classpath:/config/${spring.custom.default-env}
+  mvc: 
+    dispatch-trace-request: true
+    dispatch-options-request: true
+    favicon: 
+      enabled: false
+    formcontent: 
+      putfilter: 
+        enabled: true
+    ignore-default-model-on-redirect: true
+    log-resolved-exception: false
+    throw-exception-if-no-handler-found: true
+    servlet: 
+      load-on-startup: 4
+  resources: 
+    add-mappings: true
+  boot:  # Spring Boot Admin
+    admin: 
+      context-path: /admin
+      monitor: 
+        period: 10000
+        status-lifetime: 10000
+        connect-timeout: 5000
+        read-timeout: 10000
+        default-retries: 3 #Modyfing requests (PUT, POST, PATCH, DELETE) are never retried.
+        # retries.a: 2
+        # retries.b: 1
+      ui.title: "Member Plus Admin"
+      #hazelcast: 
+      #  enabled: true
+      #  event-store: "spring-boot-admin-event-store"
+      notify: 
+        mail:
+          enabled: true 
+          to: admin@example.com
+          cc: a@example.com, b@example.com
+          from: "Spring Boot Admin <noreply@localhost>"
+          ignore-changes: "UNKNOWN:UP"
+          template: "classpath:/META-INF/spring-boot-admin-server/mail/status-changed.html"
+  mail: 
+    host: smtp.example.com
+    username: abdsd
+    password: 12345
+
+server: 
+  compression: 
+    enabled: true
+    mime-types: text/html,text/css,application/json
+  tomcat: 
+    basedir: ./tmp
+    background-processor-delay: 30
+    additional-tld-skip-patterns: 
+    port-header: X-Forwarded-Port
+    protocol-header: X-Forwarded-Proto
+    protocol-header-https-value: https
+    redirect-context-root: true
+    remote-ip-header: X-Forwarded-For
+    uri-encoding: UTF-8
+    accesslog: 
+      enabled: true
+      buffered: true
+      directory: ./log
+      file-date-format: .yyyy-MM-dd
+      pattern: '%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i" %D'
+      prefix: access_log
+      rename-on-rotate: false
+      request-attributes-enabled: false
+      rotate: true
+      suffix: .log
+
+# ribbon负载全局配置
+ribbon:
+  ConnectionTomeout: 1000
+  #eureka客户端ribbon刷新时间
+  #默认30s
+  ServerListRefreshInterval: 5000
+  eureka:
+    enable: false
+  ReadTimeout: 5000
+  # 对所有操作请求都进行重试(禁止)
+  OkToRetryOnAllOperations: false
+  # 切换实例的重试次数
+  MaxAutoRetriesNextServer: 0
+  # 对当前实例的重试次数
+  MaxAutoRetries: 0
+# ribbon负载定向配置
+# <sericeId>: 
+#   ribbon:
+#     NFLoadBalancerPingClassName: com.netflix.loadbalancer.PingUrl
+
+logging: 
+  path: ${LOGGING_PATH}
+  register-shutdown-hook: false
+
+# ACTUATOR PROPERTIES
+management: 
+  server: 
+    port: 19988
+    servlet: 
+      context-path: /duno
+  endpoints: 
+    web: 
+      base-path: /phoenix/heimdall
+      exposure: 
+        include: '*'
+        #exclude: env
+  endpoint: 
+    shutdown: 
+      enabled: false
+    health: 
+      show-details: always    # never, always, when-authorized
+      sensitive: false
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 15000
+        # 熔断关闭
+        timeout:
+          enabled: false
+  threadpool:
+    default:
+      coreSize: 40
+      maximumSize: 100
+      maxQueueSize: 100
+

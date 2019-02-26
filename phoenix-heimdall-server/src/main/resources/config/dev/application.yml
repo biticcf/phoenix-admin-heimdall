@@ -1,0 +1,96 @@
+spring: 
+  application: 
+    name: ${TENANT_GROUP:}phoenix-heimdall
+  http: 
+    converters: 
+      preferred-json-mapper: jackson
+    encoding:
+      enabled: true
+      charset: UTF-8
+  servlet:
+    multipart: 
+      enabled: true
+      file-size-threshold: 0
+      location: .
+      max-file-size: 10MB
+      max-request-size: 10MB
+      resolve-lazily: false
+  jackson: #接口输出端日期格式
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+08:00
+  messages: 
+    encoding: UTF-8
+  mvc:  #WebMvcAutoConfiguration自动配置
+    async: 
+      request-timeout: 30000
+    date-format: yyyy-MM-dd HH:mm:ss  #接口输入端日期格式,被StringDateConverter覆盖
+  security: 
+    user: 
+      name: user
+      password: password
+    roles: 
+      - USER
+      - ADMIN
+      - SUPERUSER
+    basic: 
+      enabled: false
+
+server: 
+  port: ${SERVER_PORT:10000}
+  display-name: ${TENANT_GROUP:}phoenix-heimdall
+  connection-timeout: 12000
+  server-header: 
+  servlet: 
+    context-path: /
+    path: /
+  tomcat: 
+    async-timeout: 60000
+    max-connections: ${SERVER.TOMCAT.MAX-CONNECTIONS:1024}
+    max-threads: ${SERVER.TOMCAT.MAX-THREADS:8}
+    accept-count: ${SERVER.TOMCAT.ACCEPT-COUNT:1024}
+    min-spare-threads: ${SERVER.TOMCAT.MIN-SPARE-THREADS:2}
+    acceptor-thread-count: ${SERVER.TOMCAT.ACCEPTOR-THREAD-COUNT:8}
+    max-http-post-size: 10000000
+
+# Web Async
+# effective是高效异步任务管理池
+async: 
+  effective: 
+    maxPoolSize: 200
+    keepAliveSeconds: 60
+    queueCapacity: 2000
+    corePoolSize: 100
+    threadNamePrefix: EffectiveTask-
+    allowCoreThreadTimeOut: true
+    waitForTasksToCompleteOnShutdown: true
+  # common是普通异步任务管理池
+  common: 
+    maxPoolSize: 20
+    keepAliveSeconds: 10
+    queueCapacity: 100
+    corePoolSize: 5
+    threadNamePrefix: CommonTask-
+    allowCoreThreadTimeOut: true
+    waitForTasksToCompleteOnShutdown: true
+
+# Perform Framework
+performframework: 
+  # 单位ms
+  threshold: 50
+  # 入口配置
+  entrance: 
+    # proxyTargetClass: false
+    interceptorNames: interceptorChain
+    # 参与接口调用性能监控的类或者接口列表(支持一个*通配符),多个用英文逗号分隔
+    beanNames: '*Service'
+    # 在beanNames中不参与接口调用性能监控的类或者接口列表(支持一个*通配符)
+    beanNamesExclude: mvcConversionService,ObjectMapper
+  # 调用链配置
+  chain: 
+    # proxyTargetClass: false
+    interceptorNames: performanceInstrumentInterceptor
+    # 参与接口调用性能监控的类或者接口列表(支持一个*通配符),多个用英文逗号分隔
+    beanNames: '*Domain,*Repository,*DAO'
+    # 在beanNames中不参与接口调用性能监控的类或者接口列表(支持一个*通配符)
+    beanNamesExclude: mvcConversionService,ObjectMapper
+
